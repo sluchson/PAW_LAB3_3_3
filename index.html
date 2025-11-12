@@ -1,32 +1,44 @@
 <!DOCTYPE html>
 <html lang="pl">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GIPHY Search</title>
+  <title>GIPHY Explorer</title>
   <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
 </head>
-
 <body>
-  <h1>GIPHY Explorer</h1>
 
-  <div class="controls">
-    <form id="searchForm">
-      <input type="text" id="searchInput" placeholder="Wpisz frazę (np. cats)...">
-      <button type="submit">Szukaj</button>
-    </form>
-    
-    <div class="separator">lub</div>
-    
-    <button id="randomGifButton" class="secondary-btn">Wylosuj jeden</button>
+  <div class="app-container">
+    <header>
+      <h1>GIPHY <span class="highlight">Explorer</span></h1>
+      <p>Znajdź idealnego GIF-a</p>
+    </header>
+
+    <div class="search-section">
+      <form id="searchForm" class="search-bar">
+        <input type="text" id="searchInput" placeholder="Wpisz frazę..." autocomplete="off">
+        <button type="submit" class="btn-search">Szukaj</button>
+      </form>
+
+      <div class="divider">
+        <span>lub</span>
+      </div>
+
+      <button id="randomGifButton" class="btn-random">Wylosuj GIF</button>
+    </div>
+
+    <div id="errorMessage" class="error-box"></div>
+
+    <div id="gifContainer" class="grid-view"></div>
+
+    <div id="paginationControls" class="pagination-container hidden">
+      <button id="prevBtn" class="btn-page">❮ Poprzednia</button>
+      <span id="pageInfo">Strona 1</span>
+      <button id="nextBtn" class="btn-page">Następna ❯</button>
+    </div>
   </div>
-
-  <div id="errorMessage"></div>
-  
-  <div id="gifContainer"></div>
 
   <script src="script.js"></script>
 </body>
-
 </html>

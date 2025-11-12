@@ -1,106 +1,152 @@
-(function() {
-  const apiKey = "l8t9EivkrWkL61e3YVgC2MslC6FITWAh";
+        (function() {
+          const apiKey = "l8t9EivkrWkL61e3YVgC2MslC6FITWAh";
+          const limit = 12;
 
-  const searchForm = document.getElementById('searchForm');
-  const searchInput = document.getElementById('searchInput');
-  const randomButton = document.getElementById('randomGifButton');
-  const gifContainer = document.getElementById('gifContainer');
-  const errorDiv = document.getElementById('errorMessage');
+          const searchForm = document.getElementById('searchForm');
+          const searchInput = document.getElementById('searchInput');
+          const randomButton = document.getElementById('randomGifButton');
+          const gifContainer = document.getElementById('gifContainer');
+          const errorDiv = document.getElementById('errorMessage');
 
-  function showError(message) {
-    errorDiv.textContent = message;
-    errorDiv.style.display = 'block';
-  }
+          const paginationControls = document.getElementById('paginationControls');
+          const prevBtn = document.getElementById('prevBtn');
+          const nextBtn = document.getElementById('nextBtn');
+          const pageInfo = document.getElementById('pageInfo');
 
-  function clearError() {
-    errorDiv.textContent = '';
-    errorDiv.style.display = 'none';
-  }
+          let currentQuery = "";
+          let currentOffset = 0;
 
-  async function searchGifs(event) {
-    event.preventDefault();
-    clearError();
+          function showError(message) {
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+          }
 
-    const query = searchInput.value.trim();
-    if (!query) {
-      showError("Wpisz frazę do wyszukania.");
-      return;
-    }
+          function clearError() {
+            errorDiv.textContent = '';
+            errorDiv.style.display = 'none';
+          }
 
-    gifContainer.innerHTML = '<p style="color: #888; grid-column: 1/-1; text-align: center;">Szukanie...</p>';
-    gifContainer.className = ''; 
+          function showLoading() {
+            gifContainer.innerHTML = '<p class="loading-text">Ładowanie...</p>';
+          }
 
-    const apiUrl = `https://api.giphy.com/v1/gifs/search?api_key=${apiKey}&q=${encodeURIComponent(query)}&limit=12&rating=g`;
+          function updatePaginationUI() {
+            paginationControls.classList.remove('hidden');
+            prevBtn.disabled = (currentOffset === 0);
+            const pageNumber = Math.floor(currentOffset / limit) + 1;
+            pageInfo.textContent = `Strona ${pageNumber}`;
+          }
 
-    try {
-      const response = await fetch(apiUrl);
+          async function performSearch() {
+            clearError();
+            showLoading();
 
-      if (!response.ok) {
-        throw new Error(`Błąd HTTP: ${response.status}`);
-      }
+            gifContainer.className = 'grid-view';
 
-      const json = await response.json();
-      gifContainer.innerHTML = '';
+            const apiUrl = `https://api.giphy.com/v1/gifs/search?api_key=${apiKey}&q=${encodeURIComponent(currentQuery)}&limit=${limit}&offset=${currentOffset}&rating=g`;
 
-      if (!json.data || json.data.length === 0) {
-        showError("Brak wyników dla podanej frazy.");
-        return;
-      }
+            try {
+              const response = await fetch(apiUrl);
+              if (!response.ok) throw new Error(`Błąd HTTP: ${response.status}`);
 
-      json.data.forEach(gif => {
-        const img = document.createElement('img');
-        img.src = gif.images.fixed_height.url;
-        img.alt = gif.title;
-        img.className = 'gif-item';
-        gifContainer.appendChild(img);
-      });
+              const json = await response.json();
+              gifContainer.innerHTML = '';
 
-    } catch (error) {
-      gifContainer.innerHTML = '';
-      showError(error.message);
-      console.error(error);
-    }
-  }
+              if (!json.data || json.data.length === 0) {
+                showError("Brak wyników.");
+                paginationControls.classList.add('hidden');
+                return;
+              }
 
+              json.data.forEach(gif => {
+                const card = document.createElement('div');
+                card.className = 'gif-card';
 
-  async function fetchRandomGif() {
-    clearError();
-    searchInput.value = ''; 
-    gifContainer.innerHTML = '<p style="color: #888; width: 100%; text-align: center;">Losowanie...</p>';
-    gifContainer.className = 'single-view'; 
+                const img = document.createElement('img');
+                img.src = gif.images.fixed_height.url;
+                img.alt = gif.title;
 
-    const apiUrl = `https://api.giphy.com/v1/gifs/random?api_key=${apiKey}&rating=g`;
+                card.appendChild(img);
+                gifContainer.appendChild(card);
+              });
 
-    try {
-      const response = await fetch(apiUrl);
+              updatePaginationUI();
 
-      if (!response.ok) {
-        throw new Error(`Błąd HTTP: ${response.status}`);
-      }
+              if (currentOffset > 0) {
+                gifContainer.scrollIntoView({ behavior: 'smooth' });
+              }
 
-      const json = await response.json();
-      gifContainer.innerHTML = '';
+            } catch (error) {
+              gifContainer.innerHTML = '';
+              paginationControls.classList.add('hidden');
+              showError("Wystąpił problem z połączeniem.");
+            }
+          }
 
-      if (!json.data || !json.data.images) {
-        showError("Otrzymano puste dane.");
-        return;
-      }
+          searchForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const query = searchInput.value.trim();
 
-      const img = document.createElement('img');
-      img.src = json.data.images.original.url;
-      img.alt = json.data.title;
-      img.className = 'gif-item';
+            if (!query) {
+              showError("Proszę wpisać frazę.");
+              return;
+            }
 
-      gifContainer.appendChild(img);
+            currentQuery = query;
+            currentOffset = 0;
 
-    } catch (error) {
-      gifContainer.innerHTML = '';
-      showError(error.message);
-      console.error(error);
-    }
-  }
+            performSearch();
+          });
 
-  searchForm.addEventListener('submit', searchGifs);
-  randomButton.addEventListener('click', fetchRandomGif);
+          nextBtn.addEventListener('click', function() {
+            currentOffset += limit;
+            performSearch();
+          });
 
-})();
+          prevBtn.addEventListener('click', function() {
+            if (currentOffset >= limit) {
+              currentOffset -= limit;
+              if (currentOffset < 0) currentOffset = 0;
+              performSearch();
+            }
+          });
+
+          randomButton.addEventListener('click', async function() {
+            clearError();
+            searchInput.value = ''; 
+            showLoading();
+
+            paginationControls.classList.add('hidden');
+            gifContainer.className = 'single-view';
+
+            const apiUrl = `https://api.giphy.com/v1/gifs/random?api_key=${apiKey}&rating=g`;
+
+            try {
+              const response = await fetch(apiUrl);
+              if (!response.ok) throw new Error(`Błąd HTTP: ${response.status}`);
+
+              const json = await response.json();
+              gifContainer.innerHTML = '';
+
+              if (!json.data || !json.data.images) {
+                showError("Błąd API.");
+                return;
+              }
+
+              const img = document.createElement('img');
+              img.src = json.data.images.original.url;
+              img.alt = json.data.title;
+
+              img.onload = () => {
+                gifContainer.innerHTML = ''; 
+                gifContainer.appendChild(img);
+              };
+              gifContainer.appendChild(img);
+
+            } catch (error) {
+              gifContainer.innerHTML = '';
+              showError("Wystąpił problem z połączeniem.");
+            }
+          });
+
+        })();
