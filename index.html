@@ -1,22 +1,32 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="pl">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Losowy GIF</title>
-    <link rel="stylesheet" href="style.css" />
-  </head>
 
-  <body>
-    <h1>GIPHY Randomizer</h1>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GIPHY Search</title>
+  <link rel="stylesheet" href="style.css">
+</head>
 
-    <div class="controls">
-      <button id="randomGifButton">Wylosuj GIF</button>
-    </div>
+<body>
+  <h1>GIPHY Explorer</h1>
 
-    <div id="errorMessage"></div>
-    <div id="gifContainer"></div>
+  <div class="controls">
+    <form id="searchForm">
+      <input type="text" id="searchInput" placeholder="Wpisz frazę (np. cats)...">
+      <button type="submit">Szukaj</button>
+    </form>
+    
+    <div class="separator">lub</div>
+    
+    <button id="randomGifButton" class="secondary-btn">Wylosuj jeden</button>
+  </div>
 
-    <script src="script.js"></script>
-  </body>
+  <div id="errorMessage"></div>
+  
+  <div id="gifContainer"></div>
+
+  <script src="script.js"></script>
+</body>
+
 </html>

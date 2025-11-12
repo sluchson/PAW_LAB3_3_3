@@ -1,5 +1,8 @@
 (function() {
-  const apiKey = 'l8t9EivkrWkL61e3YVgC2MslC6FITWAh';
+  const apiKey = "l8t9EivkrWkL61e3YVgC2MslC6FITWAh";
+
+  const searchForm = document.getElementById('searchForm');
+  const searchInput = document.getElementById('searchInput');
   const randomButton = document.getElementById('randomGifButton');
   const gifContainer = document.getElementById('gifContainer');
   const errorDiv = document.getElementById('errorMessage');
@@ -14,9 +17,57 @@
     errorDiv.style.display = 'none';
   }
 
+  async function searchGifs(event) {
+    event.preventDefault();
+    clearError();
+
+    const query = searchInput.value.trim();
+    if (!query) {
+      showError("Wpisz frazę do wyszukania.");
+      return;
+    }
+
+    gifContainer.innerHTML = '<p style="color: #888; grid-column: 1/-1; text-align: center;">Szukanie...</p>';
+    gifContainer.className = ''; 
+
+    const apiUrl = `https://api.giphy.com/v1/gifs/search?api_key=${apiKey}&q=${encodeURIComponent(query)}&limit=12&rating=g`;
+
+    try {
+      const response = await fetch(apiUrl);
+
+      if (!response.ok) {
+        throw new Error(`Błąd HTTP: ${response.status}`);
+      }
+
+      const json = await response.json();
+      gifContainer.innerHTML = '';
+
+      if (!json.data || json.data.length === 0) {
+        showError("Brak wyników dla podanej frazy.");
+        return;
+      }
+
+      json.data.forEach(gif => {
+        const img = document.createElement('img');
+        img.src = gif.images.fixed_height.url;
+        img.alt = gif.title;
+        img.className = 'gif-item';
+        gifContainer.appendChild(img);
+      });
+
+    } catch (error) {
+      gifContainer.innerHTML = '';
+      showError(error.message);
+      console.error(error);
+    }
+  }
+
+
   async function fetchRandomGif() {
     clearError();
-    gifContainer.innerHTML = '<p>Losowanie...</p>';
+    searchInput.value = ''; 
+    gifContainer.innerHTML = '<p style="color: #888; width: 100%; text-align: center;">Losowanie...</p>';
+    gifContainer.className = 'single-view'; 
 
     const apiUrl = `https://api.giphy.com/v1/gifs/random?api_key=${apiKey}&rating=g`;
 
@@ -28,39 +79,28 @@
       }
 
       const json = await response.json();
-      
       gifContainer.innerHTML = '';
 
       if (!json.data || !json.data.images) {
-        showError("Otrzymano puste dane z API.");
+        showError("Otrzymano puste dane.");
         return;
       }
 
-      const imageUrl = json.data.images.original.url;
-      const title = json.data.title || "Losowy GIF";
+      const img = document.createElement('img');
+      img.src = json.data.images.original.url;
+      img.alt = json.data.title;
+      img.className = 'gif-item';
 
-      const imgElement = document.createElement('img');
-      imgElement.src = imageUrl;
-      imgElement.alt = title;
-
-      imgElement.onload = () => {
-        if (gifContainer.contains(imgElement)) return;
-        gifContainer.innerHTML = ''; 
-        gifContainer.appendChild(imgElement);
-      };
-
-      gifContainer.appendChild(imgElement);
+      gifContainer.appendChild(img);
 
     } catch (error) {
       gifContainer.innerHTML = '';
-      if (error instanceof Error) {
-        showError(error.message);
-      } else {
-        showError("Wystąpił nieoczekiwany błąd.");
-      }
+      showError(error.message);
       console.error(error);
     }
   }
 
+  searchForm.addEventListener('submit', searchGifs);
   randomButton.addEventListener('click', fetchRandomGif);
+
 })();
